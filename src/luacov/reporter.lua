@@ -52,6 +52,14 @@ local function fileMatches(filename, pattern)
    return string.find(filename, pattern)
 end
 
+--- checks if string 'filename' is a source code file (lua or tl)
+--- @param filename
+--- @return boolean
+local function isSourceCodeFile(filename)
+   return fileMatches(filename, '.%.lua$') or
+      fileMatches(filename, '.%.tl$')
+end
+
 ----------------------------------------------------------------
 --- Basic reporter class stub.
 -- Implements 'new', 'run' and 'close' methods required by `report`.
@@ -96,7 +104,7 @@ function ReporterBase:new(conf)
    end
 
    -- including files without tests
-   -- only .lua files
+   -- only source code files (lua and tl) are included
    if conf.includeuntestedfiles then
       if not lfs_ok then
          print("The option includeuntestedfiles requires the lfs module (from luafilesystem) to be installed.")
@@ -130,7 +138,7 @@ function ReporterBase:new(conf)
       local function add_empty_dir_coverage_data(directory_path)
 
          for filename, attr in dirtree(directory_path) do
-            if attr.mode == "file" and fileMatches(filename, '.%.lua$') then
+            if attr.mode == "file" and isSourceCodeFile(filename) then
                add_empty_file_coverage_data(filename)
             end
          end
@@ -142,7 +150,7 @@ function ReporterBase:new(conf)
 
       elseif (type(conf.includeuntestedfiles) == "table" and conf.includeuntestedfiles[1]) then
          for _, include_path in ipairs(conf.includeuntestedfiles) do
-            if (fileMatches(include_path, '.%.lua$')) then
+            if isSourceCodeFile(include_path) then
                add_empty_file_coverage_data(include_path)
             else
                add_empty_dir_coverage_data(include_path)
